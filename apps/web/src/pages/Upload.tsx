@@ -1,4 +1,4 @@
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 import { useNavigate, Link } from 'react-router-dom'
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
@@ -24,7 +24,8 @@ type ReceiptFormData = z.infer<typeof receiptSchema>
 export default function Upload() {
   const account = useCurrentAccount()
   const navigate = useNavigate()
-  const { mutate: signAndExecute } = useSignAndExecuteTransaction()
+  const suiClient = useSuiClient()
+  const { mutate: signAndExecute, mutateAsync: signAndExecuteAsync } = useSignAndExecuteTransaction()
   const { addReceipt } = useReceiptStore()
 
   const [file, setFile] = useState<File | null>(null)
@@ -58,9 +59,16 @@ export default function Upload() {
 
     setIsUploading(true)
     try {
-      setUploadStep('Encrypting and uploading to Walrus...')
-      const { blobId, sealPolicyId } = await uploadEncryptedReceipt(file, account.address)
+      // Step 1: Create Seal policy and encrypt/upload to Walrus
+      setUploadStep('Creating Seal policy...')
+      const { blobId, sealPolicyId } = await uploadEncryptedReceipt(
+        file,
+        account.address,
+        suiClient,
+        signAndExecuteAsync
+      )
 
+      // Step 2: Mint Receipt NFT on Sui
       setUploadStep('Minting receipt NFT on Sui...')
       const txb = await mintReceiptNFT({
         blobId,
