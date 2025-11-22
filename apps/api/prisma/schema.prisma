@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String    @id @default(uuid())
+  suiAddress              String    @unique
+  email                   String?
+  notificationPreferences Json?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  receipts                Receipt[]
+}
+
+model Receipt {
+  id            String     @id @default(uuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+
+  // Walrus storage
+  walrusBlobId  String
+  sealPolicyId  String
+
+  // On-chain reference
+  nftObjectId   String?
+
+  // Receipt metadata
+  merchantName  String
+  purchaseDate  DateTime
+  amount        Float
+  currency      String     @db.VarChar(3)
+  warrantyExpiry DateTime?
+  category      String
+
+  // Timestamps
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  reminders     Reminder[]
+
+  @@index([userId])
+  @@index([warrantyExpiry])
+}
+
+model Reminder {
+  id           String    @id @default(uuid())
+  receiptId    String
+  receipt      Receipt   @relation(fields: [receiptId], references: [id])
+  remindAt     DateTime
+  reminded     Boolean   @default(false)
+  snoozedUntil DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([remindAt])
+  @@index([receiptId])
+}
