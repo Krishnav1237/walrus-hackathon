@@ -1,25 +1,25 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface Receipt {
-  id: string;
-  blobId: string;
-  sealPolicyId: string;
-  merchant: string;
-  purchaseDate: string;
-  amount: number;
-  currency: string;
-  warrantyExpiry: string | null;
-  category: string;
-  createdAt: string;
+  id: string
+  blobId: string
+  sealPolicyId: string
+  merchant: string
+  purchaseDate: string
+  amount: number
+  currency: string
+  warrantyExpiry: string | null
+  category: string
+  createdAt: string
 }
 
 interface ReceiptStore {
-  receipts: Receipt[];
-  addReceipt: (receipt: Receipt) => void;
-  removeReceipt: (id: string) => void;
-  updateReceipt: (id: string, updates: Partial<Receipt>) => void;
-  clearReceipts: () => void;
+  receipts: Receipt[]
+  addReceipt: (receipt: Receipt) => void
+  removeReceipt: (id: string) => void
+  updateReceipt: (id: string, updates: Partial<Receipt>) => void
+  clearReceipts: () => void
 }
 
 export const useReceiptStore = create<ReceiptStore>()(
@@ -36,14 +36,12 @@ export const useReceiptStore = create<ReceiptStore>()(
         })),
       updateReceipt: (id, updates) =>
         set((state) => ({
-          receipts: state.receipts.map((r) =>
-            r.id === id ? { ...r, ...updates } : r
-          ),
+          receipts: state.receipts.map((r) => (r.id === id ? { ...r, ...updates } : r)),
         })),
       clearReceipts: () => set({ receipts: [] }),
     }),
     {
-      name: "vault-guard-receipts",
+      name: 'vault-guard-receipts',
     }
   )
-);
+)

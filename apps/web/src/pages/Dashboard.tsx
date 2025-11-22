@@ -1,62 +1,52 @@
-"use client";
-
-import { useCurrentAccount } from "@mysten/dapp-kit";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Shield, Plus, Search, Filter, Bell, LogOut } from "lucide-react";
-import Link from "next/link";
-import { ConnectButton } from "@mysten/dapp-kit";
-import { ReceiptCard } from "@/components/ReceiptCard";
-import { useReceiptStore } from "@/lib/store";
+import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useNavigate, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Shield, Plus, Search, Bell } from 'lucide-react'
+import { ConnectButton } from '@mysten/dapp-kit'
+import { ReceiptCard } from '@/components/ReceiptCard'
+import { useReceiptStore } from '@/lib/store'
 
 export default function Dashboard() {
-  const account = useCurrentAccount();
-  const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const { receipts } = useReceiptStore();
+  const account = useCurrentAccount()
+  const navigate = useNavigate()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const { receipts } = useReceiptStore()
 
   useEffect(() => {
     if (!account) {
-      router.push("/");
+      navigate('/')
     }
-  }, [account, router]);
+  }, [account, navigate])
 
-  if (!account) {
-    return null;
-  }
+  if (!account) return null
 
   const filteredReceipts = receipts.filter((receipt) => {
     const matchesSearch =
       receipt.merchant.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      receipt.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" || receipt.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+      receipt.category.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === 'all' || receipt.category === categoryFilter
+    return matchesSearch && matchesCategory
+  })
 
   const expiringCount = receipts.filter((r) => {
-    if (!r.warrantyExpiry) return false;
+    if (!r.warrantyExpiry) return false
     const daysUntilExpiry = Math.ceil(
       (new Date(r.warrantyExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
-    return daysUntilExpiry <= 30 && daysUntilExpiry > 0;
-  }).length;
+    )
+    return daysUntilExpiry <= 30 && daysUntilExpiry > 0
+  }).length
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-blue-600" />
             <span className="text-xl font-bold">VaultGuard</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link
-              href="/reminders"
-              className="relative p-2 hover:bg-gray-100 rounded-lg"
-            >
+            <Link to="/reminders" className="relative p-2 hover:bg-gray-100 rounded-lg">
               <Bell className="h-5 w-5" />
               {expiringCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
@@ -69,9 +59,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Actions Bar */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -96,7 +84,7 @@ export default function Dashboard() {
             <option value="other">Other</option>
           </select>
           <Link
-            href="/dashboard/upload"
+            to="/upload"
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             <Plus className="h-5 w-5" />
@@ -104,18 +92,13 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Receipts Grid */}
         {filteredReceipts.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-gray-400 mb-4">
-              <Shield className="h-16 w-16 mx-auto" />
-            </div>
+            <Shield className="h-16 w-16 mx-auto text-gray-300 mb-4" />
             <h2 className="text-xl font-semibold mb-2">No receipts yet</h2>
-            <p className="text-gray-600 mb-6">
-              Upload your first receipt to start building your vault
-            </p>
+            <p className="text-gray-600 mb-6">Upload your first receipt to start</p>
             <Link
-              href="/dashboard/upload"
+              to="/upload"
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
             >
               <Plus className="h-5 w-5" />
@@ -131,5 +114,5 @@ export default function Dashboard() {
         )}
       </main>
     </div>
-  );
+  )
 }
