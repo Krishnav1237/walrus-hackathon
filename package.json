@@ -2,10 +2,6 @@
   "name": "vault-guard",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "dev": "pnpm --parallel -r dev",
     "dev:web": "pnpm --filter vault-guard-web dev",
