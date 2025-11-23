@@ -1,6 +1,7 @@
-const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space'
-const WALRUS_AGGREGATOR = 'https://aggregator.walrus-testnet.walrus.space'
-const STORAGE_EPOCHS = 5
+// Walrus testnet endpoints
+const WALRUS_PUBLISHER = 'https://publisher.testnet.walrus.space'
+const WALRUS_AGGREGATOR = 'https://aggregator.testnet.walrus.space'
+const STORAGE_EPOCHS = 1
 
 export interface UploadResult {
   blobId: string
