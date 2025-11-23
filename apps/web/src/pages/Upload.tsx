@@ -90,22 +90,30 @@ export default function Upload() {
             // Extract the NFT object ID from objectChanges
             let nftObjectId = ''
 
+            console.log('Transaction result:', result)
+            console.log('Object changes:', result.objectChanges)
+
             if (result.objectChanges) {
+              // Find any created object that looks like our NFT
               const createdObject = result.objectChanges.find(
-                (change: { type: string; objectType?: string }) =>
-                  change.type === 'created' && change.objectType?.includes('ReceiptNFT')
+                (change) =>
+                  change.type === 'created' &&
+                  'objectType' in change &&
+                  (change.objectType as string)?.includes('ReceiptNFT')
               )
               if (createdObject && 'objectId' in createdObject) {
-                nftObjectId = (createdObject as { objectId: string }).objectId
+                nftObjectId = createdObject.objectId as string
               }
             }
 
             if (!nftObjectId) {
-              console.error('Failed to extract NFT object ID from transaction result', result)
+              console.error('Failed to extract NFT object ID. Object changes:', result.objectChanges)
               setIsUploading(false)
               setUploadStep('')
               return
             }
+
+            console.log('Extracted NFT object ID:', nftObjectId)
 
             addReceipt({
               id: result.digest,
