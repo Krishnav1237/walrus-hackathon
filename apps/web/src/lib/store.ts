@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 
 export interface Receipt {
   id: string
+  nftObjectId: string // The actual NFT object ID on Sui
   blobId: string
   sealPolicyId: string
   merchant: string

@@ -2,6 +2,9 @@ module vault_guard::receipt_nft {
     use sui::event;
     use std::string::{Self, String};
 
+    // ===== Errors =====
+    const ENoAccess: u64 = 0;
+
     // ===== Events =====
     public struct ReceiptMinted has copy, drop {
         receipt_id: address,
@@ -203,5 +206,38 @@ module vault_guard::receipt_nft {
 
     public fun is_warranty_valid(receipt: &ReceiptNFT, current_time: u64): bool {
         receipt.warranty_expiry > current_time
+    }
+
+    // ===== Seal Access Control =====
+
+    /// Seal approve function for private receipt access
+    /// Only the owner of the ReceiptNFT can decrypt
+    /// The id is the encryption ID (stored as hex in seal_policy_id)
+    entry fun seal_approve(id: vector<u8>, receipt: &ReceiptNFT) {
+        // Convert the encryption ID bytes to hex string
+        let id_hex = bytes_to_hex(id);
+
+        // Verify the id matches the seal_policy_id stored in the receipt
+        // This proves the caller owns the receipt for this encrypted data
+        assert!(receipt.seal_policy_id == id_hex, ENoAccess);
+    }
+
+    /// Convert bytes to hex string
+    fun bytes_to_hex(bytes: vector<u8>): String {
+        let hex_chars = b"0123456789abcdef";
+        let len = vector::length(&bytes);
+        let mut result = vector::empty<u8>();
+
+        let mut i = 0;
+        while (i < len) {
+            let byte = *vector::borrow(&bytes, i);
+            let hi = (byte >> 4) & 0xf;
+            let lo = byte & 0xf;
+            vector::push_back(&mut result, *vector::borrow(&hex_chars, (hi as u64)));
+            vector::push_back(&mut result, *vector::borrow(&hex_chars, (lo as u64)));
+            i = i + 1;
+        };
+
+        string::utf8(result)
     }
 }

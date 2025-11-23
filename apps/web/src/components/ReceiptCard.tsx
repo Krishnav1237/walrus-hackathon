@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { format, differenceInDays } from 'date-fns'
 import { Lock, Unlock, AlertTriangle, ExternalLink, X, Loader2 } from 'lucide-react'
-import { useCurrentAccount } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit'
+import { Transaction } from '@mysten/sui/transactions'
+import { fromHex } from '@mysten/sui/utils'
+import { SessionKey } from '@mysten/seal/session-key'
 import { Receipt } from '@/lib/store'
-import { decryptReceipt, createBlobUrl } from '@/lib/walrus'
+import { getSealClient, getSuiClient, fetchFromWalrus, createBlobUrl, APP_PACKAGE_ID } from '@/lib/seal'
 
 interface ReceiptCardProps {
   receipt: Receipt
@@ -11,6 +14,8 @@ interface ReceiptCardProps {
 
 export function ReceiptCard({ receipt }: ReceiptCardProps) {
   const account = useCurrentAccount()
+  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage()
+
   const [isViewing, setIsViewing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [decryptedUrl, setDecryptedUrl] = useState<string | null>(null)
@@ -49,11 +54,51 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
     setError(null)
 
     try {
-      const decryptedData = await decryptReceipt(
-        receipt.blobId,
-        receipt.sealPolicyId,
-        account.address
-      )
+      const client = getSealClient()
+      const suiClient = getSuiClient()
+
+      // Create SessionKey
+      const sessionKey = new SessionKey({
+        address: account.address,
+        packageId: APP_PACKAGE_ID,
+        ttlMin: 10,
+      })
+
+      // Get the personal message to sign
+      const message = sessionKey.getPersonalMessage()
+
+      // User signs the message
+      const { signature } = await signPersonalMessage({
+        message,
+      })
+
+      // Set the signature on the session key
+      sessionKey.setPersonalMessageSignature(signature)
+
+      // Fetch encrypted data from Walrus
+      const encryptedData = await fetchFromWalrus(receipt.blobId)
+
+      // Build transaction for seal_approve
+      const tx = new Transaction()
+      tx.moveCall({
+        target: `${APP_PACKAGE_ID}::receipt_nft::seal_approve`,
+        arguments: [
+          tx.pure.vector('u8', fromHex(receipt.sealPolicyId)),
+          tx.object(receipt.nftObjectId), // The actual NFT object ID
+        ],
+      })
+
+      const txBytes = await tx.build({
+        client: suiClient,
+        onlyTransactionKind: true
+      })
+
+      // Decrypt using Seal
+      const decryptedData = await client.decrypt({
+        data: encryptedData,
+        sessionKey,
+        txBytes,
+      })
 
       // Create blob URL for viewing
       const url = createBlobUrl(decryptedData, receipt.mimeType || 'image/jpeg')
@@ -61,7 +106,7 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
       setIsViewing(true)
     } catch (err) {
       console.error('Decryption failed:', err)
-      setError('Failed to decrypt receipt')
+      setError(`Failed to decrypt: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setIsLoading(false)
     }
@@ -89,7 +134,7 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
             <span className="text-2xl">{getCategoryEmoji(receipt.category)}</span>
             <div className="flex items-center gap-1 text-xs">
               <Lock className="h-3 w-3 text-green-600" />
-              <span className="text-green-600">Encrypted</span>
+              <span className="text-green-600">Seal Encrypted</span>
             </div>
           </div>
           <h3 className="font-semibold truncate">{receipt.merchant}</h3>
@@ -187,7 +232,7 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
             </div>
             <div className="p-4 border-t text-sm text-gray-500">
               <p>Blob ID: {receipt.blobId}</p>
-              <p>Decrypted from Walrus</p>
+              <p>Decrypted via Seal key servers</p>
             </div>
           </div>
         </div>

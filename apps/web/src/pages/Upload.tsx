@@ -6,7 +6,7 @@ import { Shield, Upload as UploadIcon, ArrowLeft, Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { uploadEncryptedReceipt } from '@/lib/walrus'
+import { uploadEncryptedReceipt } from '@/lib/seal'
 import { mintReceiptNFT } from '@/lib/sui'
 import { useReceiptStore } from '@/lib/store'
 
@@ -58,9 +58,9 @@ export default function Upload() {
 
     setIsUploading(true)
     try {
-      // Step 1: Encrypt and upload to Walrus
-      setUploadStep('Encrypting and uploading to Walrus...')
-      const { blobId, sealPolicyId } = await uploadEncryptedReceipt(
+      // Step 1: Encrypt with Seal and upload to Walrus
+      setUploadStep('Encrypting with Seal and uploading to Walrus...')
+      const { blobId, encryptionId } = await uploadEncryptedReceipt(
         file,
         account.address
       )
@@ -69,7 +69,7 @@ export default function Upload() {
       setUploadStep('Minting receipt NFT on Sui...')
       const txb = await mintReceiptNFT({
         blobId,
-        sealPolicyId,
+        sealPolicyId: encryptionId,
         merchant: data.merchant,
         purchaseDate: new Date(data.purchaseDate).getTime(),
         amount: Math.round(parseFloat(data.amount) * 100),
@@ -79,13 +79,30 @@ export default function Upload() {
       })
 
       signAndExecute(
-        { transaction: txb },
+        {
+          transaction: txb,
+        },
         {
           onSuccess: (result) => {
+            // Extract the NFT object ID from created objects
+            // The result contains objectChanges with created objects
+            let nftObjectId = result.digest // Fallback to digest
+
+            if (result.effects?.created) {
+              const createdObject = result.effects.created.find(
+                (obj: { owner: { AddressOwner?: string } }) =>
+                  obj.owner && 'AddressOwner' in obj.owner
+              )
+              if (createdObject) {
+                nftObjectId = createdObject.reference.objectId
+              }
+            }
+
             addReceipt({
               id: result.digest,
+              nftObjectId,
               blobId,
-              sealPolicyId,
+              sealPolicyId: encryptionId,
               merchant: data.merchant,
               purchaseDate: data.purchaseDate,
               amount: parseFloat(data.amount),
