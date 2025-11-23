@@ -1,7 +1,9 @@
-import { SealClient } from '@mysten/seal'
+import * as seal from '@mysten/seal'
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client'
 import { Transaction } from '@mysten/sui/transactions'
 import { fromHex, toHex } from '@mysten/sui/utils'
+
+const { SealClient, SessionKey } = seal
 
 // Verified key servers for testnet
 const KEY_SERVER_OBJECT_IDS = [
@@ -154,4 +156,4 @@ export function createBlobUrl(data: Uint8Array, mimeType: string): string {
   return URL.createObjectURL(blob)
 }
 
-export { APP_PACKAGE_ID, KEY_SERVER_OBJECT_IDS }
+export { APP_PACKAGE_ID, KEY_SERVER_OBJECT_IDS, SessionKey }

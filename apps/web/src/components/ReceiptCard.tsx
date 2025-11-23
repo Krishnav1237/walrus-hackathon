@@ -4,9 +4,8 @@ import { Lock, Unlock, AlertTriangle, ExternalLink, X, Loader2 } from 'lucide-re
 import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
 import { fromHex } from '@mysten/sui/utils'
-import { SessionKey } from '@mysten/seal'
 import { Receipt } from '@/lib/store'
-import { getSealClient, getSuiClient, fetchFromWalrus, createBlobUrl, APP_PACKAGE_ID } from '@/lib/seal'
+import { getSealClient, getSuiClient, fetchFromWalrus, createBlobUrl, APP_PACKAGE_ID, SessionKey } from '@/lib/seal'
 
 interface ReceiptCardProps {
   receipt: Receipt
