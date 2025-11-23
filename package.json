@@ -1,0 +1,25 @@
+{
+  "name": "vault-guard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "dev:web": "pnpm --filter vault-guard-web dev",
+    "dev:api": "pnpm --filter vault-guard-api dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter vault-guard-web build",
+    "build:contracts": "cd packages/contracts && sui move build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean",
+    "db:migrate": "pnpm --filter vault-guard-api db:migrate",
+    "db:generate": "pnpm --filter vault-guard-api db:generate"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
