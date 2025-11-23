@@ -56,7 +56,7 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
       )
 
       // Create blob URL for viewing
-      const url = createBlobUrl(decryptedData, 'image/jpeg')
+      const url = createBlobUrl(decryptedData, receipt.mimeType || 'image/jpeg')
       setDecryptedUrl(url)
       setIsViewing(true)
     } catch (err) {
@@ -171,11 +171,19 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
               </button>
             </div>
             <div className="p-4">
-              <img
-                src={decryptedUrl}
-                alt="Receipt"
-                className="w-full h-auto"
-              />
+              {receipt.mimeType === 'application/pdf' ? (
+                <iframe
+                  src={decryptedUrl}
+                  title="Receipt PDF"
+                  className="w-full h-[600px]"
+                />
+              ) : (
+                <img
+                  src={decryptedUrl}
+                  alt="Receipt"
+                  className="w-full h-auto"
+                />
+              )}
             </div>
             <div className="p-4 border-t text-sm text-gray-500">
               <p>Blob ID: {receipt.blobId}</p>

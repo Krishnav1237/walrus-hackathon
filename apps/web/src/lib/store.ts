@@ -11,6 +11,7 @@ export interface Receipt {
   currency: string
   warrantyExpiry: string | null
   category: string
+  mimeType: string
   createdAt: string
 }
 

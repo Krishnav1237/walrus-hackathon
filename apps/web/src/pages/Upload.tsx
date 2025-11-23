@@ -92,6 +92,7 @@ export default function Upload() {
               currency: data.currency,
               warrantyExpiry: data.warrantyExpiry || null,
               category: data.category,
+              mimeType: file.type,
               createdAt: new Date().toISOString(),
             })
             setUploadStep('Success!')
