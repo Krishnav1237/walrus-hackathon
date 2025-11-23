@@ -121,7 +121,7 @@ export async function decryptReceipt(
   ownerAddress: string
 ): Promise<Uint8Array> {
   // Fetch from Walrus
-  const response = await fetch(`${WALRUS_AGGREGATOR}/v1/${blobId}`)
+  const response = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`)
   if (!response.ok) {
     throw new Error(`Walrus fetch failed: ${response.statusText}`)
   }
