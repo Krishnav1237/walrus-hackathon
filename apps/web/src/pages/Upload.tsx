@@ -2,7 +2,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@
 import { useNavigate, Link } from 'react-router-dom'
 import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Shield, Upload as UploadIcon, ArrowLeft, Loader2 } from 'lucide-react'
+import { Shield, Upload as UploadIcon, ArrowLeft, Loader2, Image, FileText } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -60,14 +60,14 @@ export default function Upload() {
     setIsUploading(true)
     try {
       // Step 1: Encrypt with Seal and upload to Walrus
-      setUploadStep('Encrypting with Seal and uploading to Walrus...')
+      setUploadStep('Encrypting with Seal...')
       const { blobId, encryptionId } = await uploadEncryptedReceipt(
         file,
         account.address
       )
 
       // Step 2: Mint Receipt NFT on Sui
-      setUploadStep('Minting receipt NFT on Sui...')
+      setUploadStep('Minting NFT on Sui...')
       const txb = await mintReceiptNFT({
         blobId,
         sealPolicyId: encryptionId,
@@ -163,74 +163,89 @@ export default function Upload() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg">
-            <ArrowLeft className="h-5 w-5" />
+    <div className="min-h-screen bg-slate-950">
+      {/* Header */}
+      <header className="bg-slate-900/50 border-b border-slate-800">
+        <div className="container mx-auto px-6 py-4 flex items-center gap-4">
+          <Link to="/dashboard" className="p-2.5 hover:bg-slate-800 rounded-xl transition-colors">
+            <ArrowLeft className="h-5 w-5 text-slate-400" />
           </Link>
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold">Upload Receipt</span>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500/10 rounded-xl">
+              <Shield className="h-6 w-6 text-emerald-500" />
+            </div>
+            <span className="text-lg font-semibold text-white">Upload Receipt</span>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className="container mx-auto px-6 py-8 max-w-2xl">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* File Upload */}
           <div>
-            <label className="block text-sm font-medium mb-2">Receipt Image/PDF</label>
+            <label className="block text-sm font-medium mb-3 text-slate-300">Receipt Image/PDF</label>
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
-                isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                isDragActive
+                  ? 'border-emerald-500 bg-emerald-500/5'
+                  : 'border-slate-700 hover:border-slate-600 bg-slate-900/50'
               }`}
             >
               <input {...getInputProps()} />
               {preview ? (
                 <div>
                   {file?.type.startsWith('image/') ? (
-                    <img src={preview} alt="Preview" className="max-h-48 mx-auto mb-2" />
+                    <img src={preview} alt="Preview" className="max-h-48 mx-auto mb-3 rounded-lg" />
                   ) : (
-                    <div className="text-gray-600 mb-2">PDF Selected</div>
+                    <div className="p-4 bg-slate-800 rounded-xl w-fit mx-auto mb-3">
+                      <FileText className="h-10 w-10 text-slate-400" />
+                    </div>
                   )}
-                  <p className="text-sm text-gray-500">{file?.name}</p>
+                  <p className="text-sm text-slate-400">{file?.name}</p>
                 </div>
               ) : (
                 <div>
-                  <UploadIcon className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">Drag & drop or click to select</p>
-                  <p className="text-sm text-gray-400">PNG, JPG, or PDF</p>
+                  <div className="p-4 bg-slate-800 rounded-xl w-fit mx-auto mb-4">
+                    <Image className="h-8 w-8 text-slate-500" />
+                  </div>
+                  <p className="text-slate-300 mb-1">Drag & drop or click to select</p>
+                  <p className="text-sm text-slate-500">PNG, JPG, or PDF</p>
                 </div>
               )}
             </div>
           </div>
 
+          {/* Merchant Name */}
           <div>
-            <label className="block text-sm font-medium mb-2">Merchant Name *</label>
+            <label className="block text-sm font-medium mb-2 text-slate-300">Merchant Name *</label>
             <input
               {...register('merchant')}
               type="text"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
               placeholder="e.g., Best Buy"
             />
-            {errors.merchant && <p className="text-red-500 text-sm mt-1">{errors.merchant.message}</p>}
+            {errors.merchant && <p className="text-red-400 text-sm mt-2">{errors.merchant.message}</p>}
           </div>
 
+          {/* Date & Amount */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Purchase Date *</label>
+              <label className="block text-sm font-medium mb-2 text-slate-300">Purchase Date *</label>
               <input
                 {...register('purchaseDate')}
                 type="date"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
               />
-              {errors.purchaseDate && <p className="text-red-500 text-sm mt-1">{errors.purchaseDate.message}</p>}
+              {errors.purchaseDate && <p className="text-red-400 text-sm mt-2">{errors.purchaseDate.message}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Amount *</label>
+              <label className="block text-sm font-medium mb-2 text-slate-300">Amount *</label>
               <div className="flex">
-                <select {...register('currency')} className="px-3 py-2 border border-r-0 rounded-l-lg bg-gray-50">
+                <select
+                  {...register('currency')}
+                  className="px-3 py-3 bg-slate-800 border border-slate-700 border-r-0 rounded-l-xl text-white"
+                >
                   <option value="USD">$</option>
                   <option value="EUR">€</option>
                   <option value="GBP">£</option>
@@ -239,28 +254,30 @@ export default function Upload() {
                   {...register('amount')}
                   type="number"
                   step="0.01"
-                  className="flex-1 px-4 py-2 border rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-4 py-3 bg-slate-900 border border-slate-800 rounded-r-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                   placeholder="0.00"
                 />
               </div>
-              {errors.amount && <p className="text-red-500 text-sm mt-1">{errors.amount.message}</p>}
+              {errors.amount && <p className="text-red-400 text-sm mt-2">{errors.amount.message}</p>}
             </div>
           </div>
 
+          {/* Warranty Expiry */}
           <div>
-            <label className="block text-sm font-medium mb-2">Warranty Expiry (optional)</label>
+            <label className="block text-sm font-medium mb-2 text-slate-300">Warranty Expiry (optional)</label>
             <input
               {...register('warrantyExpiry')}
               type="date"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
             />
           </div>
 
+          {/* Category */}
           <div>
-            <label className="block text-sm font-medium mb-2">Category *</label>
+            <label className="block text-sm font-medium mb-2 text-slate-300">Category *</label>
             <select
               {...register('category')}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
             >
               <option value="electronics">Electronics</option>
               <option value="clothing">Clothing</option>
@@ -270,10 +287,11 @@ export default function Upload() {
             </select>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={!file || isUploading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-emerald-500 text-white py-4 rounded-xl font-semibold hover:bg-emerald-600 transition-all hover:shadow-lg hover:shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
           >
             {isUploading ? (
               <>
