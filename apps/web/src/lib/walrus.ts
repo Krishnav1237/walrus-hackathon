@@ -1,6 +1,6 @@
 // Walrus testnet endpoints
-const WALRUS_PUBLISHER = 'https://publisher.testnet.walrus.space'
-const WALRUS_AGGREGATOR = 'https://aggregator.testnet.walrus.space'
+const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space'
+const WALRUS_AGGREGATOR = 'https://aggregator.walrus-testnet.walrus.space'
 const STORAGE_EPOCHS = 1
 
 export interface UploadResult {
@@ -90,7 +90,7 @@ async function deriveKey(ownerAddress: string, policyId: string): Promise<Uint8A
  */
 async function uploadToWalrus(data: Uint8Array): Promise<string> {
   const response = await fetch(
-    `${WALRUS_PUBLISHER}/v1/store?epochs=${STORAGE_EPOCHS}`,
+    `${WALRUS_PUBLISHER}/v1/blobs?epochs=${STORAGE_EPOCHS}`,
     {
       method: 'PUT',
       body: data,
