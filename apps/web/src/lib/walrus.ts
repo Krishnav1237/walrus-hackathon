@@ -29,7 +29,7 @@ export async function uploadEncryptedReceipt(
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    encryptionKey,
+    encryptionKey as BufferSource,
     'AES-GCM',
     false,
     ['encrypt']
@@ -93,7 +93,7 @@ async function uploadToWalrus(data: Uint8Array): Promise<string> {
     `${WALRUS_PUBLISHER}/v1/blobs?epochs=${STORAGE_EPOCHS}`,
     {
       method: 'PUT',
-      body: data,
+      body: data as BodyInit,
       headers: { 'Content-Type': 'application/octet-stream' },
     }
   )
@@ -117,7 +117,7 @@ async function uploadToWalrus(data: Uint8Array): Promise<string> {
  */
 export async function decryptReceipt(
   blobId: string,
-  policyId: string,
+  _policyId: string,
   ownerAddress: string
 ): Promise<Uint8Array> {
   // Fetch from Walrus
@@ -150,7 +150,7 @@ export async function decryptReceipt(
   // Decrypt
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    decryptionKey,
+    decryptionKey as BufferSource,
     'AES-GCM',
     false,
     ['decrypt']
@@ -169,6 +169,6 @@ export async function decryptReceipt(
  * Create blob URL from decrypted data
  */
 export function createBlobUrl(data: Uint8Array, mimeType: string): string {
-  const blob = new Blob([data], { type: mimeType })
+  const blob = new Blob([data as BlobPart], { type: mimeType })
   return URL.createObjectURL(blob)
 }

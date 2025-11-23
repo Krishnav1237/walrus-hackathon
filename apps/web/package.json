@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mysten/dapp-kit": "^0.14.0",
+    "@mysten/dapp-kit": "^0.19.9",
     "@mysten/seal": "^0.9.4",
     "@mysten/sui": "^1.0.0",
     "@radix-ui/react-dialog": "^1.0.5",

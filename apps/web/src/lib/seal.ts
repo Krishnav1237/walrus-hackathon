@@ -20,9 +20,9 @@ const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space'
 const WALRUS_AGGREGATOR = 'https://aggregator.walrus-testnet.walrus.space'
 const STORAGE_EPOCHS = 1
 
-let sealClient: SealClient | null = null
+let sealClient: InstanceType<typeof SealClient> | null = null
 
-export function getSealClient(): SealClient {
+export function getSealClient(): InstanceType<typeof SealClient> {
   if (!sealClient) {
     const suiClient = new SuiClient({ url: getFullnodeUrl('testnet') })
     sealClient = new SealClient({
@@ -96,7 +96,7 @@ async function uploadToWalrus(data: Uint8Array): Promise<string> {
     `${WALRUS_PUBLISHER}/v1/blobs?epochs=${STORAGE_EPOCHS}`,
     {
       method: 'PUT',
-      body: data,
+      body: data as BodyInit,
       headers: { 'Content-Type': 'application/octet-stream' },
     }
   )
@@ -144,7 +144,6 @@ export function buildSealApproveTx(
   })
 
   // Build transaction bytes (onlyTransactionKind for Seal)
-  const suiClient = getSuiClient()
   // Note: We'll need to build this async in the actual usage
   return new Uint8Array() // Placeholder - actual building happens in component
 }
@@ -153,7 +152,7 @@ export function buildSealApproveTx(
  * Create blob URL from decrypted data
  */
 export function createBlobUrl(data: Uint8Array, mimeType: string): string {
-  const blob = new Blob([data], { type: mimeType })
+  const blob = new Blob([data as BlobPart], { type: mimeType })
   return URL.createObjectURL(blob)
 }
 

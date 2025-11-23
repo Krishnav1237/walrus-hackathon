@@ -28,12 +28,12 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
     daysUntilExpiry === null
       ? null
       : daysUntilExpiry <= 0
-      ? 'expired'
-      : daysUntilExpiry <= 7
-      ? 'critical'
-      : daysUntilExpiry <= 30
-      ? 'warning'
-      : 'safe'
+        ? 'expired'
+        : daysUntilExpiry <= 7
+          ? 'critical'
+          : daysUntilExpiry <= 30
+            ? 'warning'
+            : 'safe'
 
   const getCategoryEmoji = (category: string) => {
     const emojis: Record<string, string> = {
@@ -57,10 +57,11 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
       const suiClient = getSuiClient()
 
       // Create SessionKey
-      const sessionKey = new SessionKey({
+      const sessionKey = await SessionKey.create({
         address: account.address,
         packageId: APP_PACKAGE_ID,
         ttlMin: 10,
+        suiClient,
       })
 
       // Get the personal message to sign
@@ -156,15 +157,14 @@ export function ReceiptCard({ receipt }: ReceiptCardProps) {
           {receipt.warrantyExpiry && (
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Warranty</span>
-              <span className={`text-sm font-medium flex items-center gap-1 ${
-                expiryStatus === 'expired'
-                  ? 'text-gray-500'
-                  : expiryStatus === 'critical'
+              <span className={`text-sm font-medium flex items-center gap-1 ${expiryStatus === 'expired'
+                ? 'text-gray-500'
+                : expiryStatus === 'critical'
                   ? 'text-red-600'
                   : expiryStatus === 'warning'
-                  ? 'text-orange-600'
-                  : 'text-green-600'
-              }`}>
+                    ? 'text-orange-600'
+                    : 'text-green-600'
+                }`}>
                 {expiryStatus === 'critical' && <AlertTriangle className="h-3 w-3" />}
                 {expiryStatus === 'expired' ? 'Expired' : `${daysUntilExpiry}d left`}
               </span>
