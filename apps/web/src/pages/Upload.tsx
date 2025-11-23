@@ -1,6 +1,6 @@
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from '@mysten/dapp-kit'
 import { useNavigate, Link } from 'react-router-dom'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Shield, Upload as UploadIcon, ArrowLeft, Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -24,6 +24,7 @@ type ReceiptFormData = z.infer<typeof receiptSchema>
 export default function Upload() {
   const account = useCurrentAccount()
   const navigate = useNavigate()
+  const suiClient = useSuiClient()
   const { mutate: signAndExecute } = useSignAndExecuteTransaction()
   const { addReceipt } = useReceiptStore()
 
@@ -81,56 +82,61 @@ export default function Upload() {
       signAndExecute(
         {
           transaction: txb,
-          options: {
-            showObjectChanges: true,
-          },
         },
         {
-          onSuccess: (result) => {
-            // Extract the NFT object ID from objectChanges
-            let nftObjectId = ''
+          onSuccess: async (result) => {
+            try {
+              // Query the transaction to get objectChanges
+              const txDetails = await suiClient.getTransactionBlock({
+                digest: result.digest,
+                options: {
+                  showObjectChanges: true,
+                },
+              })
 
-            console.log('Transaction result:', result)
-            console.log('Object changes:', result.objectChanges)
+              // Extract the NFT object ID from objectChanges
+              let nftObjectId = ''
 
-            if (result.objectChanges) {
-              // Find any created object that looks like our NFT
-              const createdObject = result.objectChanges.find(
-                (change) =>
-                  change.type === 'created' &&
-                  'objectType' in change &&
-                  (change.objectType as string)?.includes('ReceiptNFT')
-              )
-              if (createdObject && 'objectId' in createdObject) {
-                nftObjectId = createdObject.objectId as string
+              if (txDetails.objectChanges) {
+                const createdObject = txDetails.objectChanges.find(
+                  (change) =>
+                    change.type === 'created' &&
+                    'objectType' in change &&
+                    (change.objectType as string)?.includes('ReceiptNFT')
+                )
+                if (createdObject && 'objectId' in createdObject) {
+                  nftObjectId = createdObject.objectId as string
+                }
               }
-            }
 
-            if (!nftObjectId) {
-              console.error('Failed to extract NFT object ID. Object changes:', result.objectChanges)
+              if (!nftObjectId) {
+                console.error('Failed to extract NFT object ID. Object changes:', txDetails.objectChanges)
+                setIsUploading(false)
+                setUploadStep('')
+                return
+              }
+
+              addReceipt({
+                id: result.digest,
+                nftObjectId,
+                blobId,
+                sealPolicyId: encryptionId,
+                merchant: data.merchant,
+                purchaseDate: data.purchaseDate,
+                amount: parseFloat(data.amount),
+                currency: data.currency,
+                warrantyExpiry: data.warrantyExpiry || null,
+                category: data.category,
+                mimeType: file.type,
+                createdAt: new Date().toISOString(),
+              })
+              setUploadStep('Success!')
+              setTimeout(() => navigate('/dashboard'), 1000)
+            } catch (err) {
+              console.error('Failed to get transaction details:', err)
               setIsUploading(false)
               setUploadStep('')
-              return
             }
-
-            console.log('Extracted NFT object ID:', nftObjectId)
-
-            addReceipt({
-              id: result.digest,
-              nftObjectId,
-              blobId,
-              sealPolicyId: encryptionId,
-              merchant: data.merchant,
-              purchaseDate: data.purchaseDate,
-              amount: parseFloat(data.amount),
-              currency: data.currency,
-              warrantyExpiry: data.warrantyExpiry || null,
-              category: data.category,
-              mimeType: file.type,
-              createdAt: new Date().toISOString(),
-            })
-            setUploadStep('Success!')
-            setTimeout(() => navigate('/dashboard'), 1000)
           },
           onError: (error) => {
             console.error('Transaction failed:', error)
@@ -146,8 +152,13 @@ export default function Upload() {
     }
   }
 
+  useEffect(() => {
+    if (!account) {
+      navigate('/')
+    }
+  }, [account, navigate])
+
   if (!account) {
-    navigate('/')
     return null
   }
 
