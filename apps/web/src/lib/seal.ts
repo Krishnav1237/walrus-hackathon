@@ -71,11 +71,11 @@ export async function uploadEncryptedReceipt(
 
   // Encrypt using Seal with threshold of 2
   // packageId must be your app's package (where seal_approve is defined)
-  const packageIdHex = APP_PACKAGE_ID.startsWith('0x') ? APP_PACKAGE_ID.slice(2) : APP_PACKAGE_ID
+  // Both packageId and id should be hex strings
   const { encryptedObject: encryptedBytes } = await client.encrypt({
     threshold: 2,
-    packageId: fromHex(packageIdHex),
-    id: encryptionId,
+    packageId: APP_PACKAGE_ID,
+    id: toHex(encryptionId),
     data: fileData,
   })
 
