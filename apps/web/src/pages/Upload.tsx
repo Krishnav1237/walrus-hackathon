@@ -84,17 +84,16 @@ export default function Upload() {
         },
         {
           onSuccess: (result) => {
-            // Extract the NFT object ID from created objects
-            // The result contains objectChanges with created objects
+            // Extract the NFT object ID from objectChanges
             let nftObjectId = result.digest // Fallback to digest
 
-            if (result.effects?.created) {
-              const createdObject = result.effects.created.find(
-                (obj: { owner: { AddressOwner?: string } }) =>
-                  obj.owner && 'AddressOwner' in obj.owner
+            if (result.objectChanges) {
+              const createdObject = result.objectChanges.find(
+                (change: { type: string; objectType?: string }) =>
+                  change.type === 'created' && change.objectType?.includes('ReceiptNFT')
               )
-              if (createdObject) {
-                nftObjectId = createdObject.reference.objectId
+              if (createdObject && 'objectId' in createdObject) {
+                nftObjectId = (createdObject as { objectId: string }).objectId
               }
             }
 
