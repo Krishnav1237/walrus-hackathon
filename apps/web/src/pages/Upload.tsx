@@ -86,13 +86,27 @@ export default function Upload() {
         {
           onSuccess: async (result) => {
             try {
-              // Query the transaction to get objectChanges
-              const txDetails = await suiClient.getTransactionBlock({
-                digest: result.digest,
-                options: {
-                  showObjectChanges: true,
-                },
-              })
+              // Helper function to retry getting transaction with exponential backoff
+              const getTransactionWithRetry = async (digest: string, maxRetries = 5) => {
+                for (let i = 0; i < maxRetries; i++) {
+                  try {
+                    return await suiClient.getTransactionBlock({
+                      digest,
+                      options: {
+                        showObjectChanges: true,
+                      },
+                    })
+                  } catch (error: any) {
+                    if (i === maxRetries - 1) throw error
+                    // Wait with exponential backoff: 500ms, 1s, 2s, 4s, 8s
+                    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, i)))
+                  }
+                }
+                throw new Error('Failed to get transaction after retries')
+              }
+
+              // Query the transaction to get objectChanges with retry logic
+              const txDetails = await getTransactionWithRetry(result.digest)
 
               // Extract the NFT object ID from objectChanges
               let nftObjectId = ''
