@@ -4,7 +4,7 @@ import { Lock, Unlock, AlertTriangle, ExternalLink, X, Loader2 } from 'lucide-re
 import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit'
 import { Transaction } from '@mysten/sui/transactions'
 import { fromHex } from '@mysten/sui/utils'
-import { SessionKey } from '@mysten/seal/session-key'
+import { SessionKey } from '@mysten/seal'
 import { Receipt } from '@/lib/store'
 import { getSealClient, getSuiClient, fetchFromWalrus, createBlobUrl, APP_PACKAGE_ID } from '@/lib/seal'
 
