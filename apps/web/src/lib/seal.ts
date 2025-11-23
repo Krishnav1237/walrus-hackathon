@@ -3,16 +3,14 @@ import { SuiClient, getFullnodeUrl } from '@mysten/sui/client'
 import { Transaction } from '@mysten/sui/transactions'
 import { fromHex, toHex } from '@mysten/sui/utils'
 
-// Seal testnet configuration
-const SEAL_PACKAGE_ID = '0x8afa5d31dbaa0a8fb07082692940ca3d56b5e856c5126cb5a3693f0a4de63b82'
-
 // Verified key servers for testnet
 const KEY_SERVER_OBJECT_IDS = [
   '0x73d05d62c18d9374e3ea529e8e0ed6161da1a141a94d3f76ae3fe4e99356db75',
   '0xf5d14a81a982144ae441cd7d64b09027f116a468bd36e7eca494f750591623c8',
 ]
 
-// App package ID (your deployed contract)
+// App package ID (your deployed contract with seal_approve)
+// This is used as the encryption namespace
 const APP_PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID || '0x0'
 
 // Walrus endpoints
@@ -70,9 +68,10 @@ export async function uploadEncryptedReceipt(
   const encryptionId = generateEncryptionId()
 
   // Encrypt using Seal with threshold of 2
+  // packageId must be your app's package (where seal_approve is defined)
   const { encryptedObject: encryptedBytes } = await client.encrypt({
     threshold: 2,
-    packageId: fromHex(SEAL_PACKAGE_ID),
+    packageId: fromHex(APP_PACKAGE_ID),
     id: encryptionId,
     data: fileData,
   })
@@ -155,4 +154,4 @@ export function createBlobUrl(data: Uint8Array, mimeType: string): string {
   return URL.createObjectURL(blob)
 }
 
-export { SEAL_PACKAGE_ID, APP_PACKAGE_ID, KEY_SERVER_OBJECT_IDS }
+export { APP_PACKAGE_ID, KEY_SERVER_OBJECT_IDS }
