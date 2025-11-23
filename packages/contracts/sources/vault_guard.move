@@ -1,23 +1,16 @@
 module vault_guard::receipt_nft {
-    use sui::object::{Self, UID};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
     use sui::event;
     use std::string::{Self, String};
 
-    // ===== Errors =====
-    const ENotOwner: u64 = 0;
-    const EExpired: u64 = 1;
-
     // ===== Events =====
-    struct ReceiptMinted has copy, drop {
+    public struct ReceiptMinted has copy, drop {
         receipt_id: address,
         owner: address,
         merchant: String,
         blob_id: String,
     }
 
-    struct ProofGenerated has copy, drop {
+    public struct ProofGenerated has copy, drop {
         receipt_id: address,
         verifier: address,
         timestamp: u64,
@@ -26,7 +19,7 @@ module vault_guard::receipt_nft {
     // ===== Objects =====
 
     /// Receipt NFT - Immutable proof of purchase
-    struct ReceiptNFT has key, store {
+    public struct ReceiptNFT has key, store {
         id: UID,
         /// Walrus blob ID for encrypted receipt
         blob_id: String,
@@ -51,13 +44,13 @@ module vault_guard::receipt_nft {
     }
 
     /// Capability for the vault owner
-    struct VaultOwnerCap has key {
+    public struct VaultOwnerCap has key {
         id: UID,
         owner: address,
     }
 
     /// Shared proof object for verification
-    struct ClaimProof has key {
+    public struct ClaimProof has key {
         id: UID,
         receipt_id: address,
         owner: address,
@@ -76,7 +69,7 @@ module vault_guard::receipt_nft {
     // ===== Public Functions =====
 
     /// Initialize vault for a new user
-    public entry fun init_vault(ctx: &mut TxContext) {
+    public fun init_vault(ctx: &mut TxContext) {
         let cap = VaultOwnerCap {
             id: object::new(ctx),
             owner: tx_context::sender(ctx),
@@ -85,7 +78,7 @@ module vault_guard::receipt_nft {
     }
 
     /// Mint a new receipt NFT
-    public entry fun mint_receipt(
+    public fun mint_receipt(
         blob_id: vector<u8>,
         seal_policy_id: vector<u8>,
         metadata_hash: vector<u8>,
@@ -129,7 +122,7 @@ module vault_guard::receipt_nft {
     }
 
     /// Generate a shareable claim proof
-    public entry fun generate_proof(
+    public fun generate_proof(
         receipt: &ReceiptNFT,
         expires_at: u64,
         allowed_verifiers: vector<address>,
@@ -172,11 +165,11 @@ module vault_guard::receipt_nft {
         };
 
         // Check verifier is allowed (empty = public)
-        if (std::vector::length(&proof.allowed_verifiers) > 0) {
+        if (vector::length(&proof.allowed_verifiers) > 0) {
             let mut allowed = false;
             let mut i = 0;
-            while (i < std::vector::length(&proof.allowed_verifiers)) {
-                if (*std::vector::borrow(&proof.allowed_verifiers, i) == verifier) {
+            while (i < vector::length(&proof.allowed_verifiers)) {
+                if (*vector::borrow(&proof.allowed_verifiers, i) == verifier) {
                     allowed = true;
                     break
                 };
