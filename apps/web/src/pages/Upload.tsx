@@ -81,11 +81,14 @@ export default function Upload() {
       signAndExecute(
         {
           transaction: txb,
+          options: {
+            showObjectChanges: true,
+          },
         },
         {
           onSuccess: (result) => {
             // Extract the NFT object ID from objectChanges
-            let nftObjectId = result.digest // Fallback to digest
+            let nftObjectId = ''
 
             if (result.objectChanges) {
               const createdObject = result.objectChanges.find(
@@ -95,6 +98,13 @@ export default function Upload() {
               if (createdObject && 'objectId' in createdObject) {
                 nftObjectId = (createdObject as { objectId: string }).objectId
               }
+            }
+
+            if (!nftObjectId) {
+              console.error('Failed to extract NFT object ID from transaction result', result)
+              setIsUploading(false)
+              setUploadStep('')
+              return
             }
 
             addReceipt({
