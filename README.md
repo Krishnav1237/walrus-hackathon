@@ -13,11 +13,11 @@ VaultGuard is a Web3 application that securely stores your receipts and warranti
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Frontend**: Vite + React, TypeScript, Tailwind CSS
 - **Wallet**: @mysten/dapp-kit
-- **Backend**: Node.js, Express, Prisma
-- **Database**: PostgreSQL
-- **Queue**: BullMQ + Redis
+- **Backend** *(Optional)*: Node.js, Express, Prisma
+- **Database** *(Optional)*: PostgreSQL
+- **Queue** *(Optional)*: BullMQ + Redis
 - **Blockchain**: Sui Move
 - **Storage**: Walrus + Seal
 
@@ -26,8 +26,8 @@ VaultGuard is a Web3 application that securely stores your receipts and warranti
 ```
 vault-guard/
 ├── apps/
-│   ├── web/           # Next.js frontend
-│   └── api/           # Express backend
+│   ├── web/           # Vite + React frontend
+│   └── api/           # Express backend (optional)
 ├── packages/
 │   └── contracts/     # Sui Move contracts
 ├── docker-compose.yml
@@ -40,39 +40,83 @@ vault-guard/
 
 - Node.js 18+
 - pnpm 8+
-- Docker (for PostgreSQL & Redis)
-- Sui CLI (for contract deployment)
+- Sui Wallet (browser extension)
+- Docker *(optional, only for backend)*
 
-### 1. Install Dependencies
+### Option A: Frontend Only (Recommended for Demo)
+
+The frontend works completely standalone with Sui + Walrus + Seal.
+
+#### 1. Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-### 2. Start Database & Redis
+#### 2. Setup Environment
+
+```bash
+cd apps/web
+echo "VITE_PACKAGE_ID=0x4eb541917d237dd2c932a4c7d79840c5c943a262ecf009bdbd855c528187ed6b" > .env
+```
+
+> **Note**: This uses the pre-deployed contract on Sui Testnet. To deploy your own, see "Deploy Contracts" below.
+
+#### 3. Start Frontend
+
+```bash
+pnpm dev
+```
+
+Open http://localhost:5173 and connect your Sui wallet (Testnet).
+
+### Option B: Full Stack (Backend + Database)
+
+For multi-device sync, warranty reminders, and analytics.
+
+#### 1. Install Dependencies
+
+```bash
+pnpm install
+```
+
+#### 2. Start Docker Services
 
 ```bash
 docker-compose up -d
 ```
 
-### 3. Setup Environment
+#### 3. Setup Environment
 
 ```bash
 # Frontend
-cp apps/web/.env.example apps/web/.env.local
+cd apps/web
+echo "VITE_PACKAGE_ID=0x4eb541917d237dd2c932a4c7d79840c5c943a262ecf009bdbd855c528187ed6b" > .env
 
 # Backend
-cp apps/api/.env.example apps/api/.env
+cd ../api
+cp .env.example .env
+# Edit .env and set ENABLE_WORKER=true for reminders
 ```
 
-### 4. Initialize Database
+#### 4. Initialize Database
 
 ```bash
 pnpm db:generate
 pnpm db:migrate
 ```
 
-### 5. Build & Deploy Contracts
+#### 5. Start Everything
+
+```bash
+# From root directory
+pnpm dev
+```
+
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3001
+
+### Deploy Your Own Contracts (Optional)
 
 ```bash
 cd packages/contracts
@@ -80,18 +124,7 @@ sui move build
 sui client publish --gas-budget 100000000
 ```
 
-Update `NEXT_PUBLIC_PACKAGE_ID` in `apps/web/.env.local` with the deployed package ID.
-
-### 6. Start Development
-
-```bash
-# Start both frontend and backend
-pnpm dev
-
-# Or individually
-pnpm dev:web    # Frontend on http://localhost:3000
-pnpm dev:api    # Backend on http://localhost:3001
-```
+Update `VITE_PACKAGE_ID` in `apps/web/.env` with your deployed package ID.
 
 ## Usage
 
