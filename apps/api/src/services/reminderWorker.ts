@@ -4,13 +4,25 @@ import IORedis from "ioredis";
 
 const prisma = new PrismaClient();
 
-// Redis connection for BullMQ
-const connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
-  maxRetriesPerRequest: null,
-});
+// Lazy-initialized Redis connection and queue
+let connection: IORedis | null = null;
+let reminderQueue: Queue | null = null;
 
-// Queue for reminder notifications
-const reminderQueue = new Queue("reminders", { connection });
+function getConnection(): IORedis {
+  if (!connection) {
+    connection = new IORedis(process.env.REDIS_URL || "redis://localhost:6379", {
+      maxRetriesPerRequest: null,
+    });
+  }
+  return connection;
+}
+
+function getQueue(): Queue {
+  if (!reminderQueue) {
+    reminderQueue = new Queue("reminders", { connection: getConnection() });
+  }
+  return reminderQueue;
+}
 
 /**
  * Start the reminder worker
@@ -55,7 +67,7 @@ export function startReminderWorker() {
 
       console.log(`Sent reminder for receipt ${reminder.receiptId}`);
     },
-    { connection }
+    { connection: getConnection() }
   );
 
   worker.on("completed", (job) => {
@@ -93,7 +105,7 @@ async function scheduleDueReminders() {
   });
 
   for (const reminder of dueReminders) {
-    await reminderQueue.add("send-reminder", {
+    await getQueue().add("send-reminder", {
       reminderId: reminder.id,
     });
   }
@@ -130,7 +142,7 @@ async function sendNotification(reminder: any) {
 export async function queueReminder(reminderId: string, remindAt: Date) {
   const delay = remindAt.getTime() - Date.now();
   if (delay > 0) {
-    await reminderQueue.add(
+    await getQueue().add(
       "send-reminder",
       { reminderId },
       { delay }

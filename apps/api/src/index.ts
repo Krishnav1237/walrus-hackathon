@@ -32,11 +32,17 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`VaultGuard API running on port ${PORT}`);
-});
+// Export app for Vercel
+export default app;
 
-// Start background worker for reminders
-if (process.env.ENABLE_WORKER === "true") {
-  startReminderWorker();
+// Start server if not running on Vercel
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`VaultGuard API running on port ${PORT}`);
+  });
+
+  // Start background worker for reminders
+  if (process.env.ENABLE_WORKER === "true") {
+    startReminderWorker();
+  }
 }
