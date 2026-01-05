@@ -39,7 +39,7 @@ vault-guard/
 ### Prerequisites
 
 - Node.js 18+
-- pnpm 8+
+- npm 8+
 - Sui Wallet (browser extension)
 - Docker *(optional, only for backend)*
 
@@ -50,22 +50,28 @@ The frontend works completely standalone with Sui + Walrus + Seal.
 #### 1. Install Dependencies
 
 ```bash
-pnpm install
+npm install
+cd apps/web
+npm install
 ```
 
 #### 2. Setup Environment
 
 ```bash
 cd apps/web
-echo "VITE_PACKAGE_ID=0x4eb541917d237dd2c932a4c7d79840c5c943a262ecf009bdbd855c528187ed6b" > .env
+cp .env.example .env
+# Edit .env if you want to use a different package ID
 ```
 
-> **Note**: This uses the pre-deployed contract on Sui Testnet. To deploy your own, see "Deploy Contracts" below.
+The default `.env` uses the pre-deployed contract on Sui Testnet:
+```
+VITE_PACKAGE_ID=0x4eb541917d237dd2c932a4c7d79840c5c943a262ecf009bdbd855c528187ed6b
+```
 
 #### 3. Start Frontend
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 Open http://localhost:5173 and connect your Sui wallet (Testnet).
@@ -77,44 +83,54 @@ For multi-device sync, warranty reminders, and analytics.
 #### 1. Install Dependencies
 
 ```bash
-pnpm install
+npm install
+cd apps/web && npm install
+cd ../api && npm install
+cd ../..
 ```
 
 #### 2. Start Docker Services
 
 ```bash
-docker-compose up -d
+docker-compose up -d postgres redis
 ```
+
+This starts PostgreSQL and Redis in the background.
 
 #### 3. Setup Environment
 
 ```bash
 # Frontend
 cd apps/web
-echo "VITE_PACKAGE_ID=0x4eb541917d237dd2c932a4c7d79840c5c943a262ecf009bdbd855c528187ed6b" > .env
+cp .env.example .env
 
 # Backend
 cd ../api
 cp .env.example .env
-# Edit .env and set ENABLE_WORKER=true for reminders
+# Edit .env if needed (default values work for local development)
 ```
 
 #### 4. Initialize Database
 
 ```bash
-pnpm db:generate
-pnpm db:migrate
+cd apps/api
+npm run db:generate
+npm run db:migrate
 ```
 
 #### 5. Start Everything
 
 ```bash
 # From root directory
-pnpm dev
+cd ../..
+npm run dev
 ```
 
+This starts both frontend and backend in parallel.
+
 - Frontend: http://localhost:5173
-- Backend: http://localhost:3001
+- Backend API: http://localhost:3001
+- Health Check: http://localhost:3001/health
 
 ### Deploy Your Own Contracts (Optional)
 
@@ -178,6 +194,25 @@ Update `VITE_PACKAGE_ID` in `apps/web/.env` with your deployed package ID.
 ## License
 
 MIT
+
+## Production Deployment
+
+For production deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+Quick production deployment with Docker:
+
+```bash
+# 1. Configure environment
+cp apps/web/.env.example apps/web/.env
+cp apps/api/.env.example apps/api/.env
+# Edit .env files with production values
+
+# 2. Build and start
+docker-compose up -d --build
+
+# 3. Run migrations
+docker-compose exec api npx prisma migrate deploy
+```
 
 ## Hackathon
 
