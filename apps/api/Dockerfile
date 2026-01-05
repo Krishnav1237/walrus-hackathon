@@ -38,6 +38,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 appuser
@@ -48,12 +51,16 @@ COPY --from=builder --chown=appuser:nodejs /app/apps/api/node_modules ./node_mod
 COPY --from=builder --chown=appuser:nodejs /app/apps/api/prisma ./prisma
 COPY --from=builder --chown=appuser:nodejs /app/apps/api/package*.json ./
 
+# Copy health check script
+COPY --chown=appuser:nodejs apps/api/healthcheck.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh
+
 USER appuser
 
 EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD /healthcheck.sh
 
 CMD ["node", "dist/index.js"]

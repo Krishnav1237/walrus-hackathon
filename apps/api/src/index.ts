@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import rateLimit from "express-rate-limit";
+import { rateLimit } from "express-rate-limit";
 import { receiptsRouter } from "./routes/receipts";
 import { remindersRouter } from "./routes/reminders";
 import { claimsRouter } from "./routes/claims";
@@ -14,7 +14,17 @@ const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 // CORS Configuration
-const corsOrigins = process.env.CORS_ORIGINS?.split(",") || ["http://localhost:5173"];
+const corsOrigins = process.env.CORS_ORIGINS?.split(",").map(origin => {
+  try {
+    // Validate URL format
+    new URL(origin.trim());
+    return origin.trim();
+  } catch (error) {
+    console.error(`Invalid CORS origin: ${origin}`);
+    return null;
+  }
+}).filter((origin): origin is string => origin !== null) || ["http://localhost:5173"];
+
 app.use(cors({
   origin: corsOrigins,
   credentials: true,

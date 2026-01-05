@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: vault-guard-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: vault_guard
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vault_guard}
     ports:
       - "5432:5432"
     volumes:
@@ -39,11 +39,15 @@ services:
     ports:
       - "3001:3001"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vault_guard
-      REDIS_URL: redis://redis:6379
-      NODE_ENV: production
-      PORT: 3001
-      ENABLE_WORKER: "true"
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3001}
+      ENABLE_WORKER: ${ENABLE_WORKER:-true}
+      SUI_NETWORK: ${SUI_NETWORK:-testnet}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,8 +63,8 @@ services:
     ports:
       - "80:80"
     environment:
-      VITE_PACKAGE_ID: "0x4eb541917d237dd2c932a4c7d79840c5c943a262ecf009bdbd855c528187ed6b"
-      VITE_API_URL: http://localhost:3001
+      VITE_PACKAGE_ID: ${VITE_PACKAGE_ID}
+      VITE_API_URL: ${VITE_API_URL}
     depends_on:
       - api
     restart: unless-stopped

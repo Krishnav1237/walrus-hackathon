@@ -132,20 +132,29 @@ Access:
 Complete stack deployment with single command:
 
 ```bash
-# 1. Configure environment variables
+# 1. Configure environment variables for Docker
+cp .env.docker.example .env
+
+# IMPORTANT: Edit .env and change the following:
+# - POSTGRES_PASSWORD (use a strong random password)
+# - DATABASE_URL (update with the new password)
+# - CORS_ORIGINS (set to your actual domain)
+nano .env
+
+# 2. Configure application-specific environment files
 cp apps/web/.env.example apps/web/.env
 cp apps/api/.env.example apps/api/.env
 
-# Edit .env files with production values
+# Edit with production values
 # Set NODE_ENV=production in apps/api/.env
 
-# 2. Build and start all services
+# 3. Build and start all services
 docker-compose up -d --build
 
-# 3. Run database migrations
+# 4. Run database migrations
 docker-compose exec api npx prisma migrate deploy
 
-# 4. Check status
+# 5. Check status
 docker-compose ps
 docker-compose logs -f
 ```

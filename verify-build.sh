@@ -3,7 +3,7 @@
 # VaultGuard Build Verification Script
 # This script verifies that all components build successfully
 
-set -e  # Exit on error
+set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
 
 echo "================================================"
 echo "VaultGuard Build Verification"
